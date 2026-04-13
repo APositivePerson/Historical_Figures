@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>历史人物对话系统 | 穿越千年</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Serif SC', 'SimSun', 'STSong', serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            color: #e8e8e8;
+        }
+
+        .header {
+            text-align: center;
+            padding: 30px 20px;
+            background: rgba(0, 0, 0, 0.3);
+            border-bottom: 2px solid #c9a227;
+        }
+
+        .header h1 {
+            font-size: 2em;
+            color: #c9a227;
+            margin-bottom: 5px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* 选择区域 */
+        .selection-section {
+            text-align: center;
+        }
+
+        .selection-section.hidden {
+            display: none;
+        }
+
+        .quick-input {
+            width: 100%;
+            max-width: 400px;
+            padding: 15px 20px;
+            font-size: 1.1em;
+            border: 2px solid #c9a227;
+            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.3);
+            color: #fff;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            padding: 15px 30px;
+            font-size: 1em;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #c9a227 0%, #d4af37 100%);
+            color: #1a1a2e;
+            font-weight: bold;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(201, 162, 39, 0.4);
+        }
+
+        .popular-figures {
+            margin-top: 30px;
+        }
+
+        .popular-figures h3 {
+            color: #c9a227;
+            margin-bottom: 15px;
+        }
+
+        .figure-chips {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .figure-chip {
+            padding: 10px 20px;
+            background: rgba(201, 162, 39, 0.2);
+            border: 1px solid rgba(201, 162, 39, 0.3);
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: #e8e8e8;
+        }
+
+        .figure-chip:hover {
+            background: #c9a227;
+            color: #1a1a2e;
+        }
+
+        /* 对话区域 */
+        .chat-section {
+            display: none;
+        }
+
+        .chat-section.active {
+            display: block;
+        }
+
+        .chat-header {
+            text-align: center;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(201, 162, 39, 0.3);
+        }
+
+        .chat-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #c9a227 0%, #d4af37 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2em;
+            margin: 0 auto 15px;
+            color: #1a1a2e;
+        }
+
+        .chat-name {
+            font-size: 1.5em;
+            color: #c9a227;
+            margin-bottom: 5px;
+        }
+
+        .chat-title {
+            color: #a0a0a0;
+            margin-bottom: 10px;
+        }
+
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 15px;
+            background: rgba(76, 175, 80, 0.2);
+            border-radius: 20px;
+            font-size: 0.9em;
+            color: #4caf50;
+        }
+
+        .status-indicator.listening {
+            background: rgba(244, 67, 54, 0.2);
+            color: #f44336;
+            animation: pulse 1s infinite;
+        }
+
+        .status-indicator.speaking {
+            background: rgba(33, 150, 243, 0.2);
+            color: #2196f3;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+
+        /* 消息区域 */
+        .messages {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 20px;
+            min-height: 300px;
+            max-height: 400px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+            border: 1px solid rgba(201, 162, 39, 0.3);
+        }
+
+        .message {
+            margin-bottom: 15px;
+            padding: 12px 18px;
+            border-radius: 10px;
+            max-width: 85%;
+            line-height: 1.6;
+        }
+
+        .message.user {
+            background: rgba(201, 162, 39, 0.2);
+            margin-left: auto;
+            border-left: 3px solid #c9a227;
+        }
+
+        .message.figure {
+            background: rgba(255, 255, 255, 0.1);
+            border-left: 3px solid #4a9eff;
+        }
+
+        .message.system {
+            background: rgba(100, 100, 100, 0.2);
+            text-align: center;
+            color: #888;
+            font-size: 0.9em;
+            margin: 20px 0;
+        }
+
+        /* 控制按钮 */
+        .controls {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .voice-btn {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            border: 3px solid #c9a227;
+            background: rgba(201, 162, 39, 0.2);
+            color: #c9a227;
+            font-size: 2em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .voice-btn:hover {
+            background: rgba(201, 162, 39, 0.3);
+            transform: scale(1.05);
+        }
+
+        .voice-btn.recording {
+            background: #f44336;
+            border-color: #f44336;
+            color: white;
+            animation: pulse 1s infinite;
+        }
+
+        .voice-btn.speaking {
+            background: #2196f3;
+            border-color: #2196f3;
+            color: white;
+            animation: pulse 1s infinite;
+        }
+
+        .hint {
+            color: #888;
+            font-size: 0.9em;
+            text-align: center;
+        }
+
+        .back-btn {
+            background: rgba(255, 255, 255, 0.1);
+            color: #e8e8e8;
+            border: 1px solid rgba(201, 162, 39, 0.3);
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 15px;
+        }
+
+        .back-btn:hover {
+            background: rgba(201, 162, 39, 0.2);
+        }
+
+        /* 打字机效果 */
+        .typing {
+            display: inline-flex;
+            gap: 4px;
+        }
+
+        .typing span {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #c9a227;
+            animation: typing 1s infinite;
+        }
+
+        .typing span:nth-child(2) { animation-delay: 0.2s; }
+        .typing span:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes typing {
+            0%, 100% { opacity: 0.3; transform: scale(0.8); }
+            50% { opacity: 1; transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1>🏛️ 历史人物对话系统</h1>
+        <p>穿越时空，与千年前的智者对话</p>
+    </header>
+
+    <div class="container">
+        <!-- 选择区域 -->
+        <section class="selection-section" id="selectionSection">
+            <div style="margin-bottom: 20px;">
+                <input type="text" class="quick-input" id="nameInput" placeholder="输入历史人物姓名...">
+                <button class="btn btn-primary" onclick="startChat()">开始对话</button>
+            </div>
+
+            <div class="popular-figures">
+                <h3>或选择热门人物</h3>
+                <div class="figure-chips">
+                    <span class="figure-chip" onclick="startChatWith('李白')">李白</span>
+                    <span class="figure-chip" onclick="startChatWith('苏轼')">苏轼</span>
+                    <span class="figure-chip" onclick="startChatWith('李世民')">李世民</span>
+                    <span class="figure-chip" onclick="startChatWith('秦始皇')">秦始皇</span>
+                    <span class="figure-chip" onclick="startChatWith('孔子')">孔子</span>
+                    <span class="figure-chip" onclick="startChatWith('王阳明')">王阳明</span>
+                    <span class="figure-chip" onclick="startChatWith('诸葛亮')">诸葛亮</span>
+                    <span class="figure-chip" onclick="startChatWith('曹操')">曹操</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- 对话区域 -->
+        <section class="chat-section" id="chatSection">
+            <div class="chat-header">
+                <div class="chat-avatar" id="chatAvatar">李</div>
+                <div class="chat-name" id="chatName">李白</div>
+                <div class="chat-title" id="chatTitle">诗仙 · 唐朝</div>
+                <div class="status-indicator" id="statusIndicator">
+                    <span class="status-dot"></span>
+                    <span id="statusText">准备就绪</span>
+                </div>
+            </div>
+
+            <div class="messages" id="messages">
+                <div class="message figure">
+                    哈哈哈！在下李白，字太白，号青莲居士。今日与君相遇，真乃人生快事！
+                </div>
+            </div>
+
+            <div class="controls">
+                <button class="voice-btn" id="voiceBtn" onclick="toggleVoice()">
+                    🎤
+                </button>
+                <div class="hint" id="hint">点击开始说话，或输入文字</div>
+            </div>
+
+            <div class="text-input" style="margin-top: 20px;">
+                <input type="text" id="textInput" placeholder="也可以直接输入文字..." style="width: 70%; padding: 12px 15px; border: 2px solid rgba(201, 162, 39, 0.3); border-radius: 8px; background: rgba(0, 0, 0, 0.3); color: #fff; font-size: 1em;" onkeypress="handleTextInput(event)">
+                <button class="btn btn-primary" onclick="sendTextInput()" style="padding: 12px 20px;">发送</button>
+            </div>
+
+            <button class="back-btn" onclick="goBack()" style="margin-top: 20px;">← 返回选择</button>
+        </section>
+    </div>
+
+    <script>
+        // 人物数据
+        const figuresData = {
+            '李白': { avatar: '李', title: '诗仙 · 唐朝', greeting: '哈哈哈！在下李白，字太白，号青莲居士。今日与君相遇，真乃人生快事！君不见黄河之水天上来，奔流到海不复回。来，与我把酒言诗，畅谈天地！' },
+            '杜甫': { avatar: '杜', title: '诗圣 · 唐朝', greeting: '在下杜甫，字子美。安得广厦千万间，大庇天下寒士俱欢颜。今日与君相见，愿共论诗道，忧国忧民。' },
+            '李世民': { avatar: '李', title: '唐太宗 · 唐朝', greeting: '朕乃唐太宗李世民。今日与卿相见，甚感欣慰。朕一生历经战乱，深知治国之难。卿有何问题，但说无妨。' },
+            '武则天': { avatar: '武', title: '则天皇帝 · 唐朝', greeting: '朕乃武曌，中国历史上唯一的女皇帝。男子能称帝，女子为何不能？卿有何事，尽管道来。' },
+            '玄奘': { avatar: '玄', title: '三藏法师 · 唐朝', greeting: '贫僧玄奘，从西天取经归来。一路艰辛，历时十七年，只为求取真经，普度众生。施主有何疑惑？' },
+            '苏轼': { avatar: '苏', title: '东坡居士 · 宋朝', greeting: '这位朋友，在下苏轼，字子瞻。今日有缘相见，不知有何见教？莫听穿林打叶声，何妨吟啸且徐行。人生嘛，总要乐观些！' },
+            '李清照': { avatar: '李', title: '易安居士 · 宋朝', greeting: '奴家李清照，号易安居士。生当作人杰，死亦为鬼雄。虽为女子，亦有豪情。君有何事相询？' },
+            '岳飞': { avatar: '岳', title: '武穆王 · 宋朝', greeting: '本将岳飞，字鹏举。精忠报国，乃吾毕生之志！三十功名尘与土，八千里路云和月。汝有何事禀报？' },
+            '朱熹': { avatar: '朱', title: '朱子 · 宋朝', greeting: '吾乃朱熹，字元晦。存天理，灭人欲，此乃理学之精义。汝有何疑惑，愿为汝解惑。' },
+            '赵匡胤': { avatar: '赵', title: '宋太祖 · 宋朝', greeting: '朕乃宋太祖赵匡胤。杯酒释兵权，以文治国，开创大宋三百年基业。卿有何见教？' },
+            '朱元璋': { avatar: '朱', title: '明太祖 · 明朝', greeting: '朕乃明太祖朱元璋。从乞丐到皇帝，朕靠的就是胆识和谋略。汝有何事禀报？' },
+            '王阳明': { avatar: '王', title: '阳明先生 · 明朝', greeting: '吾乃王守仁，号阳明。知行合一，心即理也。汝有何疑惑，愿与汝共论心学。' },
+            '郑和': { avatar: '郑', title: '三宝太监 · 明朝', greeting: '咱家郑和，奉旨七下西洋。远航万里，扬我国威。汝可愿听航海故事？' },
+            '李时珍': { avatar: '李', title: '药圣 · 明朝', greeting: '在下李时珍，历时二十七载，编成《本草纲目》。医者仁心，愿为百姓解疾苦。' },
+            '徐霞客': { avatar: '徐', title: '游圣 · 明朝', greeting: '在下徐霞客，一生好游名山。大丈夫当朝碧海而暮苍梧。汝可愿听旅途见闻？' },
+            '康熙': { avatar: '康', title: '清圣祖 · 清朝', greeting: '朕乃康熙皇帝。八岁登基，擒鳌拜，平三藩，收台湾。朕之功业，可称千古一帝。' },
+            '曹雪芹': { avatar: '曹', title: '梦阮 · 清朝', greeting: '在下曹雪芹，著《红楼梦》一书。满纸荒唐言，一把辛酸泪。都云作者痴，谁解其中味？' },
+            '林则徐': { avatar: '林', title: '文忠公 · 清朝', greeting: '本官林则徐，虎门销烟，为国为民。苟利国家生死以，岂因祸福避趋之。' },
+            '曾国藩': { avatar: '曾', title: '文正公 · 清朝', greeting: '在下曾国藩，一生崇尚理学。修身齐家治国平天下，乃吾毕生追求。' },
+            '孔子': { avatar: '孔', title: '至圣先师 · 先秦', greeting: '吾乃孔丘，字仲尼。仁者爱人，克己复礼为仁。有朋自远方来，不亦乐乎？' },
+            '老子': { avatar: '老', title: '道家始祖 · 先秦', greeting: '吾乃李耳，道家之祖。道可道，非常道；名可名，非常名。无为而治，顺其自然。' },
+            '秦始皇': { avatar: '秦', title: '始皇帝 · 秦朝', greeting: '朕乃始皇帝嬴政。书同文，车同轨，统一六国，此乃千古未有之大业！' },
+            '刘邦': { avatar: '刘', title: '汉高祖 · 汉朝', greeting: '朕乃汉高祖刘邦。大风起兮云飞扬，威加海内兮归故乡。卿有何事？' },
+            '项羽': { avatar: '项', title: '西楚霸王 · 汉朝', greeting: '吾乃项羽，力能扛鼎，气盖世！虞姬虞姬奈若何...汝可愿听吾之故事？' },
+            '司马迁': { avatar: '司', title: '太史公 · 汉朝', greeting: '吾乃太史公司马迁。究天人之际，通古今之变，成一家之言。' },
+            '曹操': { avatar: '曹', title: '魏武帝 · 三国', greeting: '吾乃曹孟德。宁教我负天下人，休教天下人负我！乱世之奸雄，治世之能臣。' },
+            '诸葛亮': { avatar: '诸', title: '武侯 · 三国', greeting: '吾乃诸葛亮，字孔明。鞠躬尽瘁，死而后已。汝有何事相询？' },
+            '关羽': { avatar: '关', title: '武圣 · 三国', greeting: '某乃关羽，字云长。桃园结义，誓同生死。义薄云天，威震华夏！' },
+            '王羲之': { avatar: '王', title: '书圣 · 东晋', greeting: '在下王羲之，字逸少。兰亭集序，乃吾得意之作。书法之道，贵在神韵。' },
+            '陶渊明': { avatar: '陶', title: '靖节先生 · 东晋', greeting: '吾乃陶渊明，字元亮。采菊东篱下，悠然见南山。不为五斗米折腰！' },
+            '杨贵妃': { avatar: '杨', title: '贵妃 · 唐朝', greeting: '本宫杨玉环，玄宗皇帝之贵妃。云想衣裳花想容，春风拂槛露华浓...' },
+            '包拯': { avatar: '包', title: '包青天 · 宋朝', greeting: '本府包拯，字希仁。公正廉明，铁面无私。有何冤情，尽管道来！' },
+            '文天祥': { avatar: '文', title: '文忠烈 · 宋朝', greeting: '吾乃文天祥，字宋瑞。人生自古谁无死，留取丹心照汗青！' },
+            '郑成功': { avatar: '郑', title: '国姓爷 · 明朝', greeting: '本藩郑成功，收复台湾，驱逐荷夷。台湾者，中国之土地也！' },
+            '孙中山': { avatar: '孙', title: '国父 · 民国', greeting: '吾乃孙中山，字逸仙。三民主义，五权宪法。革命尚未成功，同志仍需努力！' },
+            '鲁迅': { avatar: '鲁', title: '文学巨匠 · 民国', greeting: '我是鲁迅。横眉冷对千夫指，俯首甘为孺子牛。有何话要说？' }
+        };
+
+        let currentFigure = null;
+        let chatHistory = [];
+        let isRecording = false;
+        let isSpeaking = false;
+        let recognition = null;
+        let utterance = null;
+
+        // 创建新的语音识别实例
+        function createRecognition() {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            
+            if (!SpeechRecognition) {
+                return null;
+            }
+            
+            const rec = new SpeechRecognition();
+            rec.lang = 'zh-CN';
+            rec.continuous = false;
+            rec.interimResults = true;
+
+            rec.onresult = function(event) {
+                const transcript = event.results[0][0].transcript;
+                if (event.results[0].isFinal) {
+                    console.log('识别结果:', transcript);
+                    isRecording = false;
+                    updateVoiceButton();
+                    processUserInput(transcript);
+                } else {
+                    setStatus('listening', '听到了：' + transcript);
+                }
+            };
+
+            rec.onerror = function(event) {
+                console.error('语音识别错误:', event.error);
+                isRecording = false;
+                updateVoiceButton();
+                
+                let errorMsg = '语音识别出错';
+                switch(event.error) {
+                    case 'no-speech':
+                        errorMsg = '未检测到语音，请对准麦克风说话';
+                        break;
+                    case 'audio-capture':
+                        errorMsg = '无法访问麦克风，请检查权限';
+                        break;
+                    case 'not-allowed':
+                        errorMsg = '麦克风被禁止，请在浏览器设置中允许使用麦克风';
+                        break;
+                    case 'network':
+                        errorMsg = '网络错误，请检查网络连接';
+                        break;
+                    case 'aborted':
+                        errorMsg = '准备好了';
+                        break;
+                    default:
+                        errorMsg = '语音识别出错: ' + event.error;
+                }
+                setStatus('ready', errorMsg);
+            };
+
+            rec.onend = function() {
+                console.log('识别结束');
+                isRecording = false;
+                updateVoiceButton();
+            };
+
+            rec.onstart = function() {
+                console.log('语音识别已启动');
+                isRecording = true;
+                updateVoiceButton();
+                setStatus('listening', '正在聆听，请说话...');
+            };
+            
+            return rec;
+        }
+
+        // 开始录音
+        function startRecording() {
+            if (isRecording) {
+                console.log('已经在录音');
+                return;
+            }
+            
+            // 停止之前的
+            if (recognition) {
+                try {
+                    recognition.onresult = null;
+                    recognition.onerror = null;
+                    recognition.onend = null;
+                    recognition.onstart = null;
+                    recognition.abort();
+                } catch(e) {
+                    console.log('停止之前识别:', e);
+                }
+                recognition = null;
+            }
+            
+            recognition = createRecognition();
+            
+            if (!recognition) {
+                alert('抱歉，您的浏览器不支持语音识别。请使用 Chrome 或 Safari 浏览器。');
+                return;
+            }
+            
+            try {
+                recognition.start();
+            } catch(e) {
+                console.error('启动识别失败:', e);
+                if (e.name === 'InvalidStateError') {
+                    setTimeout(() => {
+                        try {
+                            recognition.start();
+                        } catch(e2) {
+                            console.error('重试也失败:', e2);
+                            isRecording = false;
+                            updateVoiceButton();
+                        }
+                    }, 100);
+                }
+            }
+        }
+
+        // 停止录音
+        function stopRecording() {
+            console.log('stopRecording called');
+            if (recognition) {
+                try {
+                    recognition.stop();
+                } catch(e) {
+                    console.log('停止识别时出错:', e);
+                }
+            }
+            isRecording = false;
+            updateVoiceButton();
+            setStatus('ready', '准备就绪');
+        }
+
+        // 切换语音
+        function toggleVoice() {
+            console.log('toggleVoice, isRecording=', isRecording, 'isSpeaking=', isSpeaking);
+            
+            if (isSpeaking) {
+                stopSpeaking();
+                return;
+            }
+            
+            if (isRecording) {
+                stopRecording();
+            } else {
+                startRecording();
+            }
+        }
+
+        // 停止语音播放
+        function stopSpeaking() {
+            if (window.speechSynthesis && utterance) {
+                window.speechSynthesis.cancel();
+            }
+            isSpeaking = false;
+            updateVoiceButton();
+            setStatus('ready', '准备就绪');
+        }
+
+        // 更新语音按钮状态
+        function updateVoiceButton() {
+            const btn = document.getElementById('voiceBtn');
+            const hint = document.getElementById('hint');
+            
+            btn.classList.remove('recording', 'speaking');
+            
+            if (isSpeaking) {
+                btn.classList.add('speaking');
+                btn.textContent = '⏹';
+                hint.textContent = '点击停止播放';
+            } else if (isRecording) {
+                btn.classList.add('recording');
+                btn.textContent = '⏸';
+                hint.textContent = '再次点击停止...';
+            } else {
+                btn.textContent = '🎤';
+                hint.textContent = '点击开始说话';
+            }
+        }
+
+        // 设置状态
+        function setStatus(type, text) {
+            const indicator = document.getElementById('statusIndicator');
+            const statusText = document.getElementById('statusText');
+            
+            indicator.classList.remove('listening', 'speaking');
+            
+            if (type === 'listening') {
+                indicator.classList.add('listening');
+            } else if (type === 'speaking') {
+                indicator.classList.add('speaking');
+            }
+            
+            statusText.textContent = text;
+        }
+
+        // 处理用户输入
+        async function processUserInput(text) {
+            stopRecording();
+            
+            // 添加用户消息
+            addMessage('user', text);
+            
+            // 发送到 AI
+            setStatus('speaking', '思考中...');
+            
+            try {
+                const reply = await callDeepSeek(text);
+                addMessage('figure', reply);
+                
+                // 语音播放回复
+                await speakText(reply);
+            } catch (error) {
+                addMessage('figure', '抱歉，出现了错误：' + error.message);
+                setStatus('ready', '准备就绪');
+            }
+        }
+
+        // 调用 DeepSeek API
+        async function callDeepSeek(userMessage) {
+            const response = await fetch('http://localhost:3001/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    messages: chatHistory.concat([{ role: 'user', content: userMessage }]),
+                    figure: currentFigure 
+                })
+            });
+            
+            if (!response.ok) {
+                throw new Error('API 调用失败');
+            }
+            
+            const data = await response.json();
+            const reply = data.choices[0].message.content;
+            
+            // 更新历史
+            chatHistory.push({ role: 'user', content: userMessage });
+            chatHistory.push({ role: 'assistant', content: reply });
+            
+            return reply;
+        }
+
+        // 语音播放
+        async function speakText(text) {
+            if (!window.speechSynthesis) {
+                setStatus('ready', '准备就绪');
+                return;
+            }
+
+            return new Promise((resolve) => {
+                utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'zh-CN';
+                utterance.rate = 1.0;
+                utterance.pitch = 1.0;
+                
+                // 选择一个中文语音
+                const voices = window.speechSynthesis.getVoices();
+                const chineseVoice = voices.find(v => v.lang.includes('zh')) || voices[0];
+                if (chineseVoice) {
+                    utterance.voice = chineseVoice;
+                }
+                
+                utterance.onstart = () => {
+                    isSpeaking = true;
+                    updateVoiceButton();
+                    setStatus('speaking', '人物正在说话...');
+                };
+                
+                utterance.onend = () => {
+                    isSpeaking = false;
+                    updateVoiceButton();
+                    setStatus('ready', '准备就绪');
+                    resolve();
+                };
+                
+                utterance.onerror = () => {
+                    isSpeaking = false;
+                    updateVoiceButton();
+                    setStatus('ready', '准备就绪');
+                    resolve();
+                };
+                
+                window.speechSynthesis.speak(utterance);
+            });
+        }
+
+        // 添加消息
+        function addMessage(type, text) {
+            const messagesDiv = document.getElementById('messages');
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `message ${type}`;
+            msgDiv.textContent = text;
+            messagesDiv.appendChild(msgDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        // 开始对话
+        function startChat() {
+            const name = document.getElementById('nameInput').value.trim();
+            if (name) {
+                startChatWith(name);
+            }
+        }
+
+        // 开始与指定人物对话
+        function startChatWith(name) {
+            currentFigure = name;
+            chatHistory = [];
+            
+            const figure = figuresData[name] || { 
+                avatar: name[0], 
+                title: '历史人物', 
+                greeting: `吾乃${name}。有何见教？` 
+            };
+            
+            // 更新界面
+            document.getElementById('chatAvatar').textContent = figure.avatar;
+            document.getElementById('chatName').textContent = name;
+            document.getElementById('chatTitle').textContent = figure.title;
+            
+            // 清空消息，添加问候语
+            const messagesDiv = document.getElementById('messages');
+            messagesDiv.innerHTML = '';
+            addMessage('figure', figure.greeting);
+            
+            // 切换界面
+            document.getElementById('selectionSection').classList.add('hidden');
+            document.getElementById('chatSection').classList.add('active');
+            
+            // 初始化语音识别
+            createRecognition();
+            
+            // 语音播放问候语
+            setTimeout(() => {
+                speakText(figure.greeting);
+            }, 500);
+        }
+
+        // 文字输入处理
+        function sendTextInput() {
+            const input = document.getElementById('textInput');
+            const text = input.value.trim();
+            if (text) {
+                processUserInput(text);
+                input.value = '';
+            }
+        }
+
+        function handleTextInput(event) {
+            if (event.key === 'Enter') {
+                sendTextInput();
+            }
+        }
+
+        // 返回选择
+        function goBack() {
+            stopSpeaking();
+            stopRecording();
+            
+            document.getElementById('chatSection').classList.remove('active');
+            document.getElementById('selectionSection').classList.remove('hidden');
+            
+            currentFigure = null;
+            chatHistory = [];
+        }
+
+        // 页面加载
+        document.addEventListener('DOMContentLoaded', () => {
+            // 预加载语音
+            if (window.speechSynthesis) {
+                window.speechSynthesis.getVoices();
+            }
+            
+            // 回车开始对话
+            document.getElementById('nameInput').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    startChat();
+                }
+            });
+            
+            // 检查是否有预选人物
+            const savedFigure = localStorage.getItem('voiceFigure');
+            if (savedFigure) {
+                localStorage.removeItem('voiceFigure');
+                // 延迟一下确保页面已加载
+                setTimeout(() => {
+                    startChatWith(savedFigure);
+                }, 300);
+            }
+        });
+    </script>
+</body>
+</html>
